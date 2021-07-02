@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite -signatures;
+use Mojo::Util qw(trim);
 
 plugin 'AutoReload';
 
@@ -19,7 +20,8 @@ get '/' => sub ($c) {
     my $crypto_url = 'https://coinpare.io/';
     my $res        = $ua->get($crypto_url)->result;
 
-    my @coins = $res->dom->find('td.coinName a')->map('text');
+    my @coins =
+      $res->dom->find('td.coinName a')->map('text')->map( sub { s/(\t)|(\n)|(\r)//gr } );
 
     $c->render( json => { coins => @coins } );
 };
