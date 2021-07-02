@@ -29,6 +29,7 @@ sub get_cryptos {
       ->map( sub { s/(\t)|(\n)|(\r)//gr } );
 
     my %hash        = ();
+    my @arr         = ();
     my $current_max = 100 * $page;
 
     sub extract_current_crypto {
@@ -37,32 +38,30 @@ sub get_cryptos {
     }
 
     for ( 0 .. 99 ) {
-        $hash{ $_ + $current_max - 99 } = {
-            name       => extract_current_crypto( $_, @names ),
-            to_dollar  => extract_current_crypto( $_, @prices ),
-            market_cap => extract_current_crypto( $_, @market_cap )
-        };
+        my $position = $_ + $current_max - 99;
+        push(
+            @arr,
+            {
+                position   => $position,
+                name       => extract_current_crypto( $_, @names ),
+                to_dollar  => extract_current_crypto( $_, @prices ),
+                market_cap => extract_current_crypto( $_, @market_cap )
+            }
+        );
     }
 
-    return %hash;
+    return @arr;
 }
 get '/' => sub ($c) {
-    my %result = get_cryptos(1);
-    $c->render( json => {%result} );
+    my @result = get_cryptos(1);
+    $c->render( json => [@result] );
 };
 
 get '/:page' => sub ($c) {
     my $page   = $c->stash('page');
-    my %result = get_cryptos($page);
-    $c->render( json => {%result} );
+    my @result = get_cryptos($page);
+    $c->render( json => [@result] );
 };
 
 app->start;
 
-# __DATA__
-
-# @@ index.html.ep
-# % my $url = url_for 'title';
-# <html>
-# <body>$res</body>
-# </html>
